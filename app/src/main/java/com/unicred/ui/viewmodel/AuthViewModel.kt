@@ -26,14 +26,14 @@ class AuthViewModel @Inject constructor(
     private val _authState = MutableStateFlow(AuthState())
     val authState: StateFlow<AuthState> = _authState.asStateFlow()
     
-    fun login(username: String, password: String, accessType: AccessType) {
+    fun login(username: String, password: String, accessType: AccessType) { // Signature updated: email to username, added accessType
         viewModelScope.launch {
             _authState.value = _authState.value.copy(isLoading = true, error = null)
             
-            authRepository.login(username, password, accessType)
-                .onSuccess { response ->
+            authRepository.login(username, password, accessType) // Call updated
+                .onSuccess { response -> // response is LoginResponse
                     _authState.value = _authState.value.copy(
-                        user = response.user,
+                        user = response.user, // User object from LoginResponse
                         isLoading = false,
                         error = null
                     )
@@ -52,10 +52,12 @@ class AuthViewModel @Inject constructor(
             _authState.value = _authState.value.copy(isLoading = true, error = null)
             
             authRepository.signup(signupData)
-                .onSuccess { user ->
+                .onSuccess { user -> 
                     _authState.value = _authState.value.copy(
+                        // user = user, // User object directly from signup success
                         isLoading = false,
                         error = null
+                        // Potentially set user here if signup response includes full user object for immediate login
                     )
                 }
                 .onFailure { exception ->

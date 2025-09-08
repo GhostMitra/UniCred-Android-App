@@ -3,6 +3,7 @@
     <string name="login_title">UniCred</string>
     <string name="login_subtitle">Student Credential Platform</string>
     <string name="username_hint">Username</string>
+    <string name="email_hint">Email</string> <!-- Added email_hint -->
     <string name="password_hint">Password</string>
     <string name="login_button">Login</string>
     <string name="signup_button">Create Account</string>
@@ -10,6 +11,7 @@
     <string name="student">Student</string>
     <string name="recruiter">Recruiter</string>
     <string name="university">University</string>
+    <string name="admin">Admin</string> <!-- Also adding admin for completeness if used elsewhere -->
     <string name="dashboard">Dashboard</string>
     <string name="credentials">My Credentials</string>
     <string name="profile">Profile</string>

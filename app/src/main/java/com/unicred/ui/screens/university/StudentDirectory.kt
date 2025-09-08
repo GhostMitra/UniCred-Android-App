@@ -76,8 +76,8 @@ fun StudentDirectory() {
     
     val filteredStudents = mockStudents.filter { student ->
         student.name.contains(searchQuery, ignoreCase = true) ||
-        student.studentId.contains(searchQuery, ignoreCase = true) ||
-        student.program.contains(searchQuery, ignoreCase = true)
+        (student.studentId?.contains(searchQuery, ignoreCase = true) ?: false) ||
+        (student.program?.contains(searchQuery, ignoreCase = true) ?: false)
     }
     
     LazyColumn(
@@ -89,8 +89,9 @@ fun StudentDirectory() {
         item {
             Text(
                 text = "Student Directory",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.headlineMedium.copy( // Fixed
+                    fontWeight = FontWeight.Bold
+                ),
                 modifier = Modifier.padding(vertical = 8.dp)
             )
         }
@@ -175,8 +176,9 @@ fun StatChip(
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleLarge.copy( // Fixed
+                    fontWeight = FontWeight.Bold
+                ),
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Text(
@@ -206,16 +208,18 @@ fun StudentCard(student: Student) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = student.name,
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        style = MaterialTheme.typography.titleLarge.copy( // Fixed
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                     Text(
-                        text = student.studentId,
+                        text = student.studentId ?: "N/A", // Handle nullable studentId
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                StatusChip(status = student.status)
+                // Ensure student.status is not null if StatusChip expects non-null
+                student.status?.let { StatusChip(status = it) } 
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -224,7 +228,7 @@ fun StudentCard(student: Student) {
             StudentDetailRow(
                 icon = Icons.Default.School,
                 label = "Program",
-                value = student.program
+                value = student.program ?: "N/A" // Handle nullable program
             )
             
             StudentDetailRow(
@@ -236,40 +240,43 @@ fun StudentCard(student: Student) {
             StudentDetailRow(
                 icon = Icons.Default.Person,
                 label = "Advisor",
-                value = student.advisor
+                value = student.advisor ?: "N/A" // Handle nullable advisor
             )
             
             StudentDetailRow(
                 icon = Icons.Default.CalendarToday,
                 label = "Enrolled",
-                value = student.enrollmentDate
+                value = student.enrollmentDate ?: "N/A" // Handle nullable enrollmentDate
             )
             
             Spacer(modifier = Modifier.height(16.dp))
             
             // Progress Bar
-            Column {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Text(
-                        text = "Progress",
-                        style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Medium
-                    )
-                    Text(
-                        text = "${student.creditsCompleted}/${student.totalCredits} credits",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (student.creditsCompleted != null && student.totalCredits != null && student.totalCredits > 0) {
+                Column {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Progress",
+                            style = MaterialTheme.typography.bodyMedium.copy(
+                                fontWeight = FontWeight.Medium
+                            )
+                        )
+                        Text(
+                            text = "${student.creditsCompleted}/${student.totalCredits} credits",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                    LinearProgressIndicator(
+                        progress = student.creditsCompleted.toFloat() / student.totalCredits.toFloat(),
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
-                Spacer(modifier = Modifier.height(4.dp))
-                LinearProgressIndicator(
-                    progress = student.creditsCompleted.toFloat() / student.totalCredits.toFloat(),
-                    modifier = Modifier.fillMaxWidth(),
-                    color = MaterialTheme.colorScheme.primary
-                )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
@@ -362,6 +369,11 @@ fun StatusChip(status: StudentStatus) {
             MaterialTheme.colorScheme.onErrorContainer,
             "Inactive"
         )
+        StudentStatus.UNKNOWN -> Triple( // Added
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "Unknown"
+        )
     }
     
     Surface(
@@ -371,9 +383,10 @@ fun StatusChip(status: StudentStatus) {
         Text(
             text = text,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = textColor,
-            fontWeight = FontWeight.Medium
+            style = MaterialTheme.typography.labelSmall.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            color = textColor
         )
     }
 }

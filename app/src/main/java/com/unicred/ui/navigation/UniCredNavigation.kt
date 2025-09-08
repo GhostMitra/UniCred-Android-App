@@ -15,6 +15,7 @@ import com.unicred.ui.screens.recruiter.RecruiterPortal
 import com.unicred.ui.screens.student.StudentPortal
 import com.unicred.ui.screens.university.UniversityPortal
 import com.unicred.ui.viewmodel.AuthViewModel
+import com.unicred.data.AccessType // Import AccessType if not already
 
 @Composable
 fun UniCredNavigation(
@@ -28,10 +29,12 @@ fun UniCredNavigation(
     NavHost(
         navController = navController,
         startDestination = if (currentUser != null) { // Use the local variable
-            when (currentUser.accessType) { // Smart cast is now possible
-                com.unicred.data.AccessType.STUDENT -> "student_portal"
-                com.unicred.data.AccessType.RECRUITER -> "recruiter_portal"
-                com.unicred.data.AccessType.UNIVERSITY -> "university_portal"
+            when (currentUser.role) { // Changed from accessType to role
+                AccessType.STUDENT -> "student_portal"
+                AccessType.RECRUITER -> "recruiter_portal"
+                AccessType.UNIVERSITY -> "university_portal"
+                AccessType.ADMIN -> "admin_portal" // Assuming you might have an admin portal
+                else -> "login" // Fallback for any other unhandled or null roles
             }
         } else {
             "login"
@@ -42,10 +45,13 @@ fun UniCredNavigation(
             LoginScreen(
                 onLoginSuccess = { user ->
                     authViewModel.setUser(user)
-                    when (user.accessType) {
-                        com.unicred.data.AccessType.STUDENT -> navController.navigate("student_portal")
-                        com.unicred.data.AccessType.RECRUITER -> navController.navigate("recruiter_portal")
-                        com.unicred.data.AccessType.UNIVERSITY -> navController.navigate("university_portal")
+                    // Navigate based on user.role after login
+                    when (user.role) {
+                        AccessType.STUDENT -> navController.navigate("student_portal") { popUpTo("login") { inclusive = true } }
+                        AccessType.RECRUITER -> navController.navigate("recruiter_portal") { popUpTo("login") { inclusive = true } }
+                        AccessType.UNIVERSITY -> navController.navigate("university_portal") { popUpTo("login") { inclusive = true } }
+                        AccessType.ADMIN -> navController.navigate("admin_portal") { popUpTo("login") { inclusive = true } }
+                        else -> navController.navigate("login") { popUpTo("login") { inclusive = true } } // Fallback
                     }
                 },
                 onNavigateToSignup = {
@@ -57,7 +63,10 @@ fun UniCredNavigation(
         composable("signup") {
             SignupScreen(
                 onSignupSuccess = {
-                    navController.popBackStack()
+                    // Navigate to login after successful signup
+                    navController.navigate("login") {
+                        popUpTo("login") { inclusive = true } // Clear back stack to login
+                    }
                 },
                 onBackToLogin = {
                     navController.popBackStack()
@@ -67,7 +76,7 @@ fun UniCredNavigation(
 
         composable("student_portal") {
             val userForPortal = authState.user
-            if (userForPortal != null) {
+            if (userForPortal != null && userForPortal.role == AccessType.STUDENT) {
                 StudentPortal(
                     user = userForPortal,
                     onLogout = {
@@ -77,12 +86,15 @@ fun UniCredNavigation(
                         }
                     }
                 )
+            } else {
+                // If user is null or not a student, redirect to login
+                navController.navigate("login") { popUpTo(navController.graph.id) { inclusive = true } }
             }
         }
 
         composable("recruiter_portal") {
             val userForPortal = authState.user
-            if (userForPortal != null) {
+            if (userForPortal != null && userForPortal.role == AccessType.RECRUITER) {
                 RecruiterPortal(
                     user = userForPortal,
                     onLogout = {
@@ -92,12 +104,14 @@ fun UniCredNavigation(
                         }
                     }
                 )
+            } else {
+                 navController.navigate("login") { popUpTo(navController.graph.id) { inclusive = true } }
             }
         }
 
         composable("university_portal") {
             val userForPortal = authState.user
-            if (userForPortal != null) {
+            if (userForPortal != null && userForPortal.role == AccessType.UNIVERSITY) {
                 UniversityPortal(
                     user = userForPortal,
                     onLogout = {
@@ -107,6 +121,20 @@ fun UniCredNavigation(
                         }
                     }
                 )
+            } else {
+                navController.navigate("login") { popUpTo(navController.graph.id) { inclusive = true } }
+            }
+        }
+        
+        // Example for admin_portal, create the actual Composable if needed
+        composable("admin_portal") {
+            val userForPortal = authState.user
+            if (userForPortal != null && userForPortal.role == AccessType.ADMIN) {
+                // AdminPortal(...)
+                // For now, redirect to login if AdminPortal Composable doesn't exist
+                 navController.navigate("login") { popUpTo(navController.graph.id) { inclusive = true } }
+            } else {
+                navController.navigate("login") { popUpTo(navController.graph.id) { inclusive = true } }
             }
         }
     }

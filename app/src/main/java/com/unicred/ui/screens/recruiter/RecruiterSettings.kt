@@ -65,9 +65,10 @@ fun RecruiterSettings(
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 Text(
-                    text = user.fullName ?: user.username,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
+                    text = user.fullName ?: user.username ?: "N/A", // Fixed nullable and combined fontWeight
+                    style = MaterialTheme.typography.headlineSmall.copy(
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = MaterialTheme.colorScheme.onPrimaryContainer
                 )
                 
@@ -78,7 +79,7 @@ fun RecruiterSettings(
                 )
                 
                 Text(
-                    text = user.email ?: "No email provided",
+                    text = user.email ?: "N/A", // Fixed nullable
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                 )
@@ -95,21 +96,22 @@ fun RecruiterSettings(
             ) {
                 Text(
                     text = "Profile Information",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                         fontWeight = FontWeight.Bold // Ensuring fontWeight is applied via style
+                    ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
                 ProfileInfoRow(
                     icon = Icons.Default.Person,
                     label = "Username",
-                    value = user.username
+                    value = user.username ?: "N/A" // Fixed nullable
                 )
                 
                 ProfileInfoRow(
                     icon = Icons.Default.Email,
                     label = "Email",
-                    value = user.email ?: "Not provided"
+                    value = user.email ?: "N/A" // Fixed nullable and made consistent
                 )
                 
                 ProfileInfoRow(
@@ -130,8 +132,9 @@ fun RecruiterSettings(
             ) {
                 Text(
                     text = "Verification Settings",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold // Ensuring fontWeight is applied via style
+                    ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
@@ -168,8 +171,9 @@ fun RecruiterSettings(
             ) {
                 Text(
                     text = "Quick Actions",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold // Ensuring fontWeight is applied via style
+                    ),
                     modifier = Modifier.padding(bottom = 16.dp)
                 )
                 
@@ -206,7 +210,7 @@ fun RecruiterSettings(
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "Logout",
-                fontWeight = FontWeight.SemiBold
+                fontWeight = FontWeight.SemiBold // This is fine as there's no separate style parameter
             )
         }
     }
@@ -218,7 +222,7 @@ fun RecruiterSettings(
             title = {
                 Text(
                     text = "Logout",
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold // Fine
                 )
             },
             text = {
@@ -310,8 +314,9 @@ fun ActionButton(
             Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.SemiBold // Ensuring fontWeight is applied via style
+                    )
                 )
                 Text(
                     text = subtitle,

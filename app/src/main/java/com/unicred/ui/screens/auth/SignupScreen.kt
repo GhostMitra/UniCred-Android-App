@@ -14,14 +14,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.res.stringResource // Added for consistency, though R.string not used yet for titles
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import com.unicred.R
+import com.unicred.R // Keep if any R.string.xxx are used, otherwise it can be removed if not needed.
 import com.unicred.data.AccessType
 import com.unicred.data.SignupData
 import com.unicred.ui.viewmodel.AuthViewModel
@@ -36,70 +36,65 @@ fun SignupScreen(
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var validId by remember { mutableStateOf("") }
     var selectedUserType by remember { mutableStateOf(AccessType.STUDENT) }
     var passwordVisible by remember { mutableStateOf(false) }
-    
+
     val authState by authViewModel.authState.collectAsState()
-    
-    // Handle signup success
+
     LaunchedEffect(authState.user) {
-        if (authState.user != null && !authState.isLoading) {
+        if (authState.user != null && !authState.isLoading && authState.error == null) {
             onSignupSuccess()
         }
     }
-    
+
     Column(
         modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
     ) {
-        // Top App Bar
         TopAppBar(
-            title = { 
+            title = {
                 Text(
-                    text = "Create Account",
-                    fontWeight = FontWeight.Bold
+                    text = "Create Account", // Consider using stringResource
+                    style = MaterialTheme.typography.titleLarge // Changed
                 )
             },
             navigationIcon = {
                 IconButton(onClick = onBackToLogin) {
                     Icon(
                         imageVector = Icons.Default.ArrowBack,
-                        contentDescription = "Back to Login"
+                        contentDescription = "Back to Login" // Consider stringResource
                     )
                 }
             },
             colors = TopAppBarDefaults.topAppBarColors(
-                containerColor = MaterialTheme.colorScheme.surface
+                containerColor = MaterialTheme.colorScheme.surface // Standard color
             )
         )
-        
+
         Column(
             modifier = Modifier
-                .fillMaxSize()
+                .fillMaxSize() // This fillMaxSize here might be redundant if the parent Column already handles sizing
                 .padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            // User Type Selection
+            Spacer(modifier = Modifier.height(24.dp)) // Initial spacer before form elements
+
             Text(
-                text = "Select Account Type:",
+                text = "Select Account Type:", // Consider stringResource
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.align(Alignment.Start)
             )
-            
             Spacer(modifier = Modifier.height(8.dp))
-            
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .selectableGroup(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                AccessType.values().forEach { userType ->
+                AccessType.values().filter { it != AccessType.ADMIN }.forEach { userType ->
                     val isSelected = selectedUserType == userType
                     Card(
                         modifier = Modifier
@@ -107,7 +102,7 @@ fun SignupScreen(
                             .selectable(
                                 selected = isSelected,
                                 onClick = { selectedUserType = userType },
-                                role = androidx.compose.ui.semantics.Role.RadioButton
+                                role = Role.RadioButton
                             ),
                         colors = CardDefaults.cardColors(
                             containerColor = if (isSelected) {
@@ -120,11 +115,12 @@ fun SignupScreen(
                     ) {
                         Text(
                             text = when (userType) {
-                                AccessType.STUDENT -> "Student"
-                                AccessType.RECRUITER -> "Recruiter"
-                                AccessType.UNIVERSITY -> "University"
+                                AccessType.STUDENT -> "Student" // Consider stringResource
+                                AccessType.RECRUITER -> "Recruiter" // Consider stringResource
+                                AccessType.UNIVERSITY -> "University" // Consider stringResource
+                                else -> ""
                             },
-                            modifier = Modifier.padding(12.dp),
+                            modifier = Modifier.padding(12.dp).fillMaxWidth(), // Added fillMaxWidth
                             textAlign = TextAlign.Center,
                             color = if (isSelected) {
                                 MaterialTheme.colorScheme.onPrimary
@@ -136,14 +132,13 @@ fun SignupScreen(
                     }
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(32.dp))
-            
-            // Name Field
+
             OutlinedTextField(
                 value = name,
                 onValueChange = { name = it },
-                label = { Text("Full Name") },
+                label = { Text("Full Name") }, // Consider stringResource R.string.full_name_hint
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -151,14 +146,12 @@ fun SignupScreen(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 )
             )
-            
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Email Field
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Email") },
+                label = { Text("Email") }, // Consider stringResource R.string.email_hint
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 colors = OutlinedTextFieldDefaults.colors(
@@ -166,14 +159,12 @@ fun SignupScreen(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 )
             )
-            
             Spacer(modifier = Modifier.height(16.dp))
-            
-            // Password Field
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Password") },
+                label = { Text("Password") }, // Consider stringResource R.string.password_hint
                 modifier = Modifier.fillMaxWidth(),
                 singleLine = true,
                 visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
@@ -181,7 +172,7 @@ fun SignupScreen(
                     IconButton(onClick = { passwordVisible = !passwordVisible }) {
                         Icon(
                             imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
-                            contentDescription = if (passwordVisible) "Hide password" else "Show password"
+                            contentDescription = if (passwordVisible) "Hide password" else "Show password" // Consider stringResource
                         )
                     }
                 },
@@ -190,42 +181,16 @@ fun SignupScreen(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline
                 )
             )
-            
-            Spacer(modifier = Modifier.height(16.dp))
-            
-            // Valid ID Field
-            OutlinedTextField(
-                value = validId,
-                onValueChange = { validId = it },
-                label = { 
-                    Text(
-                        when (selectedUserType) {
-                            AccessType.STUDENT -> "Student ID"
-                            AccessType.RECRUITER -> "Company ID"
-                            AccessType.UNIVERSITY -> "University ID"
-                        }
-                    )
-                },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
-            )
-            
             Spacer(modifier = Modifier.height(32.dp))
-            
-            // Signup Button
+
             Button(
                 onClick = {
-                    if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank() && validId.isNotBlank()) {
+                    if (name.isNotBlank() && email.isNotBlank() && password.isNotBlank()) {
                         val signupData = SignupData(
-                            userType = selectedUserType,
-                            name = name,
+                            username = name,
                             email = email,
                             password = password,
-                            validId = validId
+                            accessType = selectedUserType.name.lowercase()
                         )
                         authViewModel.signup(signupData)
                     }
@@ -233,11 +198,10 @@ fun SignupScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
-                enabled = !authState.isLoading && 
-                    name.isNotBlank() && 
-                    email.isNotBlank() && 
-                    password.isNotBlank() && 
-                    validId.isNotBlank(),
+                enabled = !authState.isLoading &&
+                        name.isNotBlank() &&
+                        email.isNotBlank() &&
+                        password.isNotBlank(),
                 shape = RoundedCornerShape(8.dp)
             ) {
                 if (authState.isLoading) {
@@ -246,31 +210,29 @@ fun SignupScreen(
                         color = MaterialTheme.colorScheme.onPrimary
                     )
                 } else {
-                    Text(
-                        text = "Create Account",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
+                    Text(text = "Create Account") // Removed manual font size/weight. Consider stringResource R.string.create_account_button
                 }
             }
-            
-            // Error Message
-            authState.error?.let { error ->
+
+            authState.error?.let {
                 Spacer(modifier = Modifier.height(16.dp))
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    ),
+                    shape = RoundedCornerShape(8.dp) // Consistent shape for error card
                 ) {
                     Text(
-                        text = error,
-                        modifier = Modifier.padding(16.dp),
+                        text = it, // Changed from error variable name for clarity
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(), // Added fillMaxWidth
                         color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodyMedium
+                        style = MaterialTheme.typography.bodyMedium,
+                        textAlign = TextAlign.Center // Centered error text
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(24.dp)) // Added spacer at the bottom for scroll padding
         }
     }
 }

@@ -1,26 +1,21 @@
 package com.unicred.data
 
 import android.os.Parcelable
+import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
 
+/**
+ * Data class for the signup request body.
+ * API expects: username, email, password, accessType (as String)
+ */
 @Parcelize
 data class SignupData(
-    val userType: AccessType,
-    val name: String,
+    @SerializedName("username")
+    val username: String,
+    @SerializedName("email")
     val email: String,
+    @SerializedName("password")
     val password: String,
-    val validId: String
-) : Parcelable
-
-@Parcelize
-data class LoginRequest(
-    val id: String,
-    val password: String,
-    val accessType: AccessType
-) : Parcelable
-
-@Parcelize
-data class LoginResponse(
-    val user: User,
-    val token: String? = null
+    @SerializedName("accessType") // Changed from "role" to "accessType" to match API
+    val accessType: String // e.g., "student", "recruiter"
 ) : Parcelable

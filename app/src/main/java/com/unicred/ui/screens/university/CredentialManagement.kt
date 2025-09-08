@@ -387,6 +387,26 @@ fun StatusChip(status: CredentialStatus) {
             MaterialTheme.colorScheme.onErrorContainer,
             "Expired"
         )
+        CredentialStatus.REVOKED -> Triple( // Added
+            MaterialTheme.colorScheme.errorContainer, 
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Revoked"
+        )
+        CredentialStatus.ANCHORED -> Triple( // Added
+            MaterialTheme.colorScheme.tertiaryContainer, 
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            "Anchored"
+        )
+        CredentialStatus.ACCEPTED -> Triple( // Added
+            MaterialTheme.colorScheme.primaryContainer, 
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            "Accepted"
+        )
+        CredentialStatus.UNKNOWN -> Triple( // Added
+            MaterialTheme.colorScheme.surfaceVariant, 
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "Unknown"
+        )
     }
     
     Surface(

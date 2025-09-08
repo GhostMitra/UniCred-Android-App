@@ -3,6 +3,7 @@ package com.unicred.data
 import android.os.Parcelable
 import com.google.gson.annotations.SerializedName
 import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.RawValue // Added import
 
 /**
  * Represents a ledger event (structure is a placeholder based on common needs).
@@ -19,5 +20,5 @@ data class LedgerEvent(
     @SerializedName("description")
     val description: String? = null, // A human-readable description
     @SerializedName("details")
-    val details: Map<String, Any>? = null // For any other event-specific data
+    val details: @RawValue Map<String, Any>? = null // Added @RawValue annotation
 ) : Parcelable
