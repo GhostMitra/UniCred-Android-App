@@ -11,70 +11,77 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.unicred.data.Credential
 import com.unicred.data.CredentialStatus
-import com.unicred.data.CredentialType
-import com.unicred.data.User
+import com.unicred.ui.viewmodel.StudentCredentialsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentCredentials(user: User) {
-    // Mock data for demonstration
-    val mockCredentials = remember {
-        listOf(
-            Credential(
-                id = "1",
-                title = "Bachelor of Computer Science",
-                type = CredentialType.BACHELOR,
-                institution = "University of Technology",
-                dateIssued = "2023-06-15",
-                status = CredentialStatus.VERIFIED,
-                studentId = user.studentId ?: "STU001",
-                studentName = user.fullName ?: "John Doe",
-                blockchainHash = "0x1234567890abcdef"
-            ),
-            Credential(
-                id = "2",
-                title = "Machine Learning Certificate",
-                type = CredentialType.CERTIFICATE,
-                institution = "Tech Academy",
-                dateIssued = "2023-08-20",
-                status = CredentialStatus.PENDING,
-                studentId = user.studentId ?: "STU001",
-                studentName = user.fullName ?: "John Doe"
-            ),
-            Credential(
-                id = "3",
-                title = "Data Science Diploma",
-                type = CredentialType.DIPLOMA,
-                institution = "Data Institute",
-                dateIssued = "2023-05-10",
-                status = CredentialStatus.VERIFIED,
-                studentId = user.studentId ?: "STU001",
-                studentName = user.fullName ?: "John Doe",
-                blockchainHash = "0xabcdef1234567890"
-            )
-        )
-    }
-    
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Text(
-                text = "My Credentials",
-                style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(vertical = 8.dp)
-            )
-        }
-        
-        items(mockCredentials) { credential ->
-            DetailedCredentialCard(credential = credential)
+fun StudentCredentials(
+    viewModel: StudentCredentialsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        when {
+            uiState.isLoading -> {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+            }
+            uiState.errorMessage != null -> {
+                Card(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .align(Alignment.Center),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Text(
+                        text = uiState.errorMessage ?: "An unexpected error occurred.",
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    item {
+                        Text(
+                            text = "My Credentials",
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier.padding(bottom = 8.dp, top = 8.dp) // Added top padding for consistency
+                        )
+                    }
+
+                    if (uiState.credentials.isEmpty()) {
+                        item {
+                            Text(
+                                text = "No credentials found.",
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = TextAlign.Center,
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
+                            )
+                        }
+                    } else {
+                        items(
+                            items = uiState.credentials,
+                            key = { credential -> credential.id } // Use credential.id as a stable key
+                        ) { credential ->
+                            DetailedCredentialCard(credential = credential)
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -84,34 +91,47 @@ fun DetailedCredentialCard(credential: Credential) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(1.dp))
     ) {
         Column(
-            modifier = Modifier.padding(20.dp)
+            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top 
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
                     Text(
                         text = credential.title,
                         style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis
                     )
+                    Spacer(modifier = Modifier.height(4.dp))
                     Text(
                         text = credential.institution,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        style = MaterialTheme.typography.titleSmall, 
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
                 }
-                StatusChip(status = credential.status)
+                StatusChip(status = credential.status) 
             }
             
             Spacer(modifier = Modifier.height(16.dp))
+            HorizontalDivider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), thickness = 0.5.dp) // Changed to HorizontalDivider
+            Spacer(modifier = Modifier.height(16.dp))
+
+            CredentialDetailRow(
+                icon = Icons.Filled.VpnKey, 
+                label = "Credential ID",
+                value = credential.id
+            )
             
-            // Credential Details
             CredentialDetailRow(
                 icon = Icons.Default.School,
                 label = "Type",
@@ -121,27 +141,41 @@ fun DetailedCredentialCard(credential: Credential) {
             CredentialDetailRow(
                 icon = Icons.Default.CalendarToday,
                 label = "Date Issued",
-                value = credential.dateIssued
+                value = credential.dateIssued 
             )
-            
-            if (credential.blockchainHash != null) {
+
+            credential.studentName?.let {
                 CredentialDetailRow(
-                    icon = Icons.Default.Security,
-                    label = "Blockchain Hash",
-                    value = credential.blockchainHash.take(20) + "...",
-                    isClickable = true
+                    icon = Icons.Default.PersonOutline,
+                    label = "Student Name",
+                    value = it
+                )
+            }
+            credential.studentId?.let {
+                 CredentialDetailRow(
+                    icon = Icons.Default.Badge,
+                    label = "Student ID",
+                    value = it
                 )
             }
             
-            Spacer(modifier = Modifier.height(16.dp))
+            credential.blockchainHash?.let {
+                CredentialDetailRow(
+                    icon = Icons.Default.Security,
+                    label = "Blockchain Hash",
+                    value = it.take(20) + "...", 
+                    isClickable = true 
+                )
+            }
             
-            // Action Buttons
+            Spacer(modifier = Modifier.height(20.dp)) 
+            
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.spacedBy(12.dp) 
             ) {
                 OutlinedButton(
-                    onClick = { /* Share credential */ },
+                    onClick = { /* TODO: Share credential */ },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -155,8 +189,8 @@ fun DetailedCredentialCard(credential: Credential) {
                 }
                 
                 if (credential.status == CredentialStatus.VERIFIED) {
-                    Button(
-                        onClick = { /* Download PDF */ },
+                    FilledTonalButton( // Changed to FilledTonalButton
+                        onClick = { /* TODO: Download PDF */ },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
@@ -184,30 +218,86 @@ fun CredentialDetailRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp),
+            .padding(vertical = 6.dp), // Adjusted vertical padding
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
             imageVector = icon,
             contentDescription = label,
             modifier = Modifier.size(20.dp),
-            tint = MaterialTheme.colorScheme.primary
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f) 
         )
-        Spacer(modifier = Modifier.width(12.dp))
+        Spacer(modifier = Modifier.width(16.dp)) 
         Text(
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(100.dp)
+            modifier = Modifier.width(115.dp) // Adjusted label width
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyMedium,
-            color = if (isClickable) {
-                MaterialTheme.colorScheme.primary
-            } else {
-                MaterialTheme.colorScheme.onSurface
-            }
+            fontWeight = FontWeight.SemiBold, 
+            color = if (isClickable) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
+        )
+    }
+}
+
+@Composable
+fun StatusChip(status: CredentialStatus?) {
+    val currentStatus = status ?: CredentialStatus.UNKNOWN
+    val (backgroundColor, textColor, text) = when (currentStatus) {
+        CredentialStatus.VERIFIED -> Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            "Verified"
+        )
+        CredentialStatus.PENDING -> Triple(
+            MaterialTheme.colorScheme.secondaryContainer,
+            MaterialTheme.colorScheme.onSecondaryContainer,
+            "Pending"
+        )
+        CredentialStatus.EXPIRED -> Triple(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Expired"
+        )
+        CredentialStatus.REVOKED -> Triple(
+            MaterialTheme.colorScheme.errorContainer,
+            MaterialTheme.colorScheme.onErrorContainer,
+            "Revoked"
+        )
+        CredentialStatus.ANCHORED -> Triple(
+            MaterialTheme.colorScheme.tertiaryContainer,
+            MaterialTheme.colorScheme.onTertiaryContainer,
+            "Anchored"
+        )
+        CredentialStatus.ACCEPTED -> Triple(
+            MaterialTheme.colorScheme.primaryContainer,
+            MaterialTheme.colorScheme.onPrimaryContainer,
+            "Accepted"
+        )
+        CredentialStatus.UNKNOWN -> Triple(
+            MaterialTheme.colorScheme.surfaceVariant,
+            MaterialTheme.colorScheme.onSurfaceVariant,
+            "Unknown"
+        )
+    }
+
+    Surface(
+        shape = RoundedCornerShape(16.dp),
+        color = backgroundColor,
+        tonalElevation = 1.dp 
+    ) {
+        Text(
+            text = text,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp), 
+            style = MaterialTheme.typography.labelMedium.copy(
+                fontWeight = FontWeight.Medium
+            ),
+            color = textColor
         )
     }
 }

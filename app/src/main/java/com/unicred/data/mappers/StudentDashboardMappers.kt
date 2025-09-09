@@ -4,21 +4,47 @@ import com.unicred.data.Credential
 import com.unicred.data.CredentialStatus
 import com.unicred.data.CredentialType
 import com.unicred.data.User
-import com.unicred.data.remote.responses.ApiCredential
-import com.unicred.data.remote.responses.StudentDetails
-import com.unicred.data.remote.responses.StudentMetricsResponse
+import com.unicred.data.remote.responses.ApiCredential // Existing import
+import com.unicred.data.remote.responses.ApiCredentialEntry // New import for wallet credentials
+import com.unicred.data.StudentMetricsInfo
+import com.unicred.data.StudentMetricsResponse
 import com.unicred.ui.viewmodel.StudentDashboardUiState
 
+// Existing mapper for a general ApiCredential (if still used elsewhere)
 fun ApiCredential.toDomainCredential(studentFullName: String): Credential {
     return Credential(
         id = this.id,
         title = this.title,
         type = mapCredentialType(this.type),
         institution = this.institution,
-        dateIssued = this.dateIssued.substringBefore("T"), // Assuming you want to display only the date part
+        dateIssued = this.dateIssued.substringBefore("T"),
         status = mapCredentialStatus(this.status),
         studentId = this.studentId,
-        studentName = studentFullName // Use the student's full name from the StudentDetails
+        studentName = studentFullName
+        // Note: This mapper doesn't include fields like vcJwt, blockchainHash, etc.
+        // If ApiCredential is similar to ApiCredentialEntry, consider consolidating or enhancing this.
+    )
+}
+
+/**
+ * Maps an ApiCredentialEntry from the student wallet API to a domain Credential object.
+ */
+fun ApiCredentialEntry.toDomainCredential(studentFullName: String?): Credential {
+    return Credential(
+        id = this.id,
+        title = this.title,
+        type = mapCredentialType(this.type),
+        institution = this.institution,
+        dateIssued = this.dateIssued.substringBefore("T"), // Assuming date-only display
+        status = mapCredentialStatus(this.status), // Credential.status is nullable
+        studentId = this.studentId,
+        vcJwt = this.vcJwt,
+        blockchainHash = this.vcHash, // Mapping vcHash to blockchainHash
+        recruiterApproved = this.recruiterApproved,
+        studentAccepted = this.studentAccepted,
+        createdAt = this.createdAt,
+        updatedAt = this.updatedAt,
+        studentName = studentFullName
     )
 }
 
@@ -51,27 +77,20 @@ fun mapCredentialStatus(apiStatus: String): CredentialStatus {
     }
 }
 
-// Maps the StudentDetails from the API to your app's User domain model
-// The User from login (AuthViewModel) is the source of truth for username, full accessType etc.
-// This mapper focuses on creating a User object for display within the StudentDashboardUiState
-// using information from the /metrics API.
-fun StudentDetails.toDomainUserForDashboard(loggedInUser: User?): User {
+fun StudentMetricsInfo.toDomainUserForDashboard(loggedInUser: User?): User {
     return User(
-        id = loggedInUser?.id ?: this.id, // Prefer ID from logged-in user if available, fallback to metrics studentId
-        username = loggedInUser?.username ?: "", // Username comes from login
-        accessType = loggedInUser?.accessType ?: "student", // AccessType from login
-        email = this.email, // Email from metrics
-        fullName = this.name, // FullName from metrics
-        studentId = this.id // This is the crucial ID, e.g., "cmeyt1zxl000dy5ie2yc1zr93"
-        // other fields like tokens, etc., would come from the loggedInUser session
+        id = loggedInUser?.id ?: this.id,
+        username = loggedInUser?.username ?: "",
+        accessType = loggedInUser?.accessType ?: "student",
+        email = this.email,
+        fullName = this.name,
+        studentId = this.id
     )
 }
 
 fun StudentMetricsResponse.toStudentDashboardUiState(loggedInUser: User?): StudentDashboardUiState {
     val mappedUser = this.student.toDomainUserForDashboard(loggedInUser)
-    val mappedCredentials = this.recentCredentials.map { 
-        it.toDomainCredential(studentFullName = this.student.name) 
-    }
+    val mappedCredentials = this.recentCredentials
     return StudentDashboardUiState(
         user = mappedUser,
         credentials = mappedCredentials,

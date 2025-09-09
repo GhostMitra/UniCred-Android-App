@@ -20,7 +20,7 @@ data class Credential(
     @SerializedName("dateIssued")
     val dateIssued: String, // ISO String format
     @SerializedName("status")
-    val status: CredentialStatus, // Changed from String
+    val status: CredentialStatus?, // Changed from String, MADE NULLABLE
     @SerializedName("studentId")
     val studentId: String? = null, // studentId can be optional in some contexts
     @SerializedName("vcJwt")
@@ -46,7 +46,18 @@ data class Credential(
 // Enums for client-side categorization/logic. Values should align with API string enums.
 @Parcelize
 enum class CredentialType : Parcelable {
-    BACHELOR, MASTER, CERTIFICATE, DIPLOMA, UNKNOWN
+    BACHELOR,
+    MASTER,
+    PHD, // Added
+    DIPLOMA,
+    CERTIFICATE,
+    DEGREE, // Added
+    HONORS, // Added
+    MICROCREDENTIAL, // Added
+    SKILL_BADGE, // Added
+    PROFESSIONAL_LICENSE, // Added
+    OTHER, // Added
+    UNKNOWN
 }
 
 @Parcelize

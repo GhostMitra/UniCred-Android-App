@@ -1,5 +1,11 @@
-package com.unicred.di // Or your chosen package for Hilt modules
+package com.unicred.di
 
+// This Hilt module has been disabled to prevent duplicate bindings.
+// All network dependencies are now provided by com.unicred.network.NetworkModule.
+// Please ensure this file is no longer treated as an active Hilt module.
+// If Dagger errors persist, consider deleting this file or ensuring it's excluded from compilation if necessary.
+
+/*
 import com.unicred.data.remote.ApiService
 import dagger.Module
 import dagger.Provides
@@ -12,19 +18,16 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 
 @Module
-@InstallIn(SingletonComponent::class) // Provides instances at the application level
+@InstallIn(SingletonComponent::class)
 object NetworkModule {
 
-    // Ensure this is your correct base URL
-    private const val BASE_URL = "https://unicred-portal-api.debarghaya.in/"
+    private const val BASE_URL = "https://unicred-portal-api.debarghaya.in"
 
     @Provides
     @Singleton
     fun provideHttpLoggingInterceptor(): HttpLoggingInterceptor {
         val loggingInterceptor = HttpLoggingInterceptor()
-        // Set to Level.BODY for development to see request/response bodies
-        // Set to Level.NONE or Level.BASIC for production
-        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY) 
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY)
         return loggingInterceptor
     }
 
@@ -32,8 +35,7 @@ object NetworkModule {
     @Singleton
     fun provideOkHttpClient(loggingInterceptor: HttpLoggingInterceptor): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(loggingInterceptor) // Add the logging interceptor
-            // Add other interceptors here if needed (e.g., for auth tokens in the future)
+            .addInterceptor(loggingInterceptor)
             .build()
     }
 
@@ -43,7 +45,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(GsonConverterFactory.create()) // Using Gson for JSON parsing
+            .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
 
@@ -53,3 +55,4 @@ object NetworkModule {
         return retrofit.create(ApiService::class.java)
     }
 }
+*/

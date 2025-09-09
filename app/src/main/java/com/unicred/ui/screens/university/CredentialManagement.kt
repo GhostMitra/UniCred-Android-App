@@ -1,4 +1,4 @@
-package com.unicred.ui.screens.university
+package com.unicred.ui.screens.university // Package can be refactored later if screen moves
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,174 +11,107 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.unicred.data.Credential
 import com.unicred.data.CredentialStatus
-import com.unicred.data.CredentialType
+// import com.unicred.data.CredentialType // Not directly used in top-level composable
+import com.unicred.ui.screens.student.StatusChip // Using the one from student package
+import com.unicred.ui.viewmodel.StudentWalletViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CredentialManagement() {
-    var searchQuery by remember { mutableStateOf("") }
-    var showCreateDialog by remember { mutableStateOf(false) }
-    
-    // Mock credential data
-    val mockCredentials = remember {
-        mutableStateListOf(
-            Credential(
-                id = "1",
-                title = "Bachelor of Computer Science",
-                type = CredentialType.BACHELOR,
-                institution = "University of Technology",
-                dateIssued = "2023-06-15",
-                status = CredentialStatus.VERIFIED,
-                studentId = "STU001",
-                studentName = "John Doe",
-                blockchainHash = "0x1234567890abcdef"
-            ),
-            Credential(
-                id = "2",
-                title = "Master of Data Science",
-                type = CredentialType.MASTER,
-                institution = "University of Technology",
-                dateIssued = "2023-08-20",
-                status = CredentialStatus.PENDING,
-                studentId = "STU002",
-                studentName = "Jane Smith"
-            ),
-            Credential(
-                id = "3",
-                title = "Machine Learning Certificate",
-                type = CredentialType.CERTIFICATE,
-                institution = "University of Technology",
-                dateIssued = "2023-05-10",
-                status = CredentialStatus.VERIFIED,
-                studentId = "STU003",
-                studentName = "Mike Johnson",
-                blockchainHash = "0xabcdef1234567890"
-            )
-        )
-    }
-    
-    val filteredCredentials = mockCredentials.filter { credential ->
-        credential.title.contains(searchQuery, ignoreCase = true) ||
-        credential.studentName?.contains(searchQuery, ignoreCase = true) == true ||
-        credential.studentId?.contains(searchQuery, ignoreCase = true) == true
-    }
-    
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+fun StudentWalletScreen( // Renamed composable
+    viewModel: StudentWalletViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        if (uiState.isLoading) {
+            CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
+        } else if (uiState.errorMessage != null) {
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp)
+                    .align(Alignment.Center),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
+                shape = RoundedCornerShape(12.dp)
             ) {
                 Text(
-                    text = "Credential Management",
-                    style = MaterialTheme.typography.headlineMedium,
-                    fontWeight = FontWeight.Bold
+                    text = uiState.errorMessage ?: "An unexpected error occurred.",
+                    color = MaterialTheme.colorScheme.onErrorContainer,
+                    modifier = Modifier.padding(16.dp).fillMaxWidth(),
+                    textAlign = TextAlign.Center
                 )
-                FloatingActionButton(
-                    onClick = { showCreateDialog = true },
-                    modifier = Modifier.size(48.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Create Credential"
-                    )
+            }
+        } else {
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = "My Credentials", // Changed title
+                            style = MaterialTheme.typography.headlineMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        // Removed FAB for creating credentials
+                    }
+                }
+
+                // Removed Search Bar
+
+                item {
+                    // Stats Row - now based on uiState.credentials
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        CredentialStatChip(
+                            label = "Total",
+                            value = uiState.credentials.size.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        CredentialStatChip(
+                            label = "Verified",
+                            value = uiState.credentials.count { it.status == CredentialStatus.VERIFIED }.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                        CredentialStatChip(
+                            label = "Pending",
+                            value = uiState.credentials.count { it.status == CredentialStatus.PENDING }.toString(),
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+
+                if (uiState.credentials.isEmpty()) {
+                    item {
+                        Text(
+                            text = "No credentials found in your wallet.",
+                            style = MaterialTheme.typography.bodyMedium,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
+                        )
+                    }
+                } else {
+                    items(uiState.credentials) { credential ->
+                        CredentialManagementCard(credential = credential) // Reusing this card
+                    }
                 }
             }
         }
-        
-        item {
-            // Search Bar
-            OutlinedTextField(
-                value = searchQuery,
-                onValueChange = { searchQuery = it },
-                label = { Text("Search credentials...") },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
-                    )
-                },
-                trailingIcon = {
-                    if (searchQuery.isNotEmpty()) {
-                        IconButton(onClick = { searchQuery = "" }) {
-                            Icon(
-                                imageVector = Icons.Default.Clear,
-                                contentDescription = "Clear"
-                            )
-                        }
-                    }
-                },
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = MaterialTheme.colorScheme.primary,
-                    unfocusedBorderColor = MaterialTheme.colorScheme.outline
-                )
-            )
-        }
-        
-        item {
-            // Stats Row
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                CredentialStatChip(
-                    label = "Total",
-                    value = mockCredentials.size.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-                CredentialStatChip(
-                    label = "Verified",
-                    value = mockCredentials.count { it.status == CredentialStatus.VERIFIED }.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-                CredentialStatChip(
-                    label = "Pending",
-                    value = mockCredentials.count { it.status == CredentialStatus.PENDING }.toString(),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-        
-        items(filteredCredentials) { credential ->
-            CredentialManagementCard(credential = credential)
-        }
     }
-    
-    // Create Credential Dialog
-    if (showCreateDialog) {
-        CreateCredentialDialog(
-            onDismiss = { showCreateDialog = false },
-            onCreate = { title, studentId, studentName, dateIssued ->
-                // TODO: Implement actual credential creation logic here
-                // For example, add to a ViewModel, make an API call, etc.
-                // For now, let's just print it and add to the mock list
-                println("New Credential: Title=$title, StudentID=$studentId, Name=$studentName, Date=$dateIssued")
-                val newCredential = Credential(
-                    id = (mockCredentials.size + 1).toString(), // Simple ID generation
-                    title = title,
-                    type = CredentialType.CERTIFICATE, // Defaulting type, you might want to add type selection
-                    institution = "Your University", // Defaulting institution
-                    dateIssued = dateIssued,
-                    status = CredentialStatus.PENDING, // Defaulting status
-                    studentId = studentId,
-                    studentName = studentName
-                )
-                mockCredentials.add(newCredential)
-                showCreateDialog = false // Dismiss dialog after creation
-            }
-        )
-    }
+    // Removed CreateCredentialDialog and its state
 }
 
 @Composable
@@ -235,17 +168,16 @@ fun CredentialManagementCard(credential: Credential) {
                         fontWeight = FontWeight.Bold
                     )
                     Text(
-                        text = credential.studentName ?: "Unknown Student",
+                        text = credential.studentName ?: "N/A", // Student name might be null
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                StatusChip(status = credential.status)
+                StatusChip(status = credential.status) // Uses imported StatusChip
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Credential Details
             CredentialDetailRow(
                 icon = Icons.Default.School,
                 label = "Type",
@@ -253,7 +185,7 @@ fun CredentialManagementCard(credential: Credential) {
             )
             
             CredentialDetailRow(
-                icon = Icons.Default.Person,
+                icon = Icons.Default.Badge, // Changed icon for Student ID for variety
                 label = "Student ID",
                 value = credential.studentId ?: "N/A"
             )
@@ -263,25 +195,25 @@ fun CredentialManagementCard(credential: Credential) {
                 label = "Date Issued",
                 value = credential.dateIssued
             )
-            
+
             if (credential.blockchainHash != null) {
                 CredentialDetailRow(
                     icon = Icons.Default.Security,
                     label = "Blockchain Hash",
                     value = credential.blockchainHash.take(20) + "...",
-                    isClickable = true
+                    isClickable = true // Placeholder for potential copy/view action
                 )
             }
             
             Spacer(modifier = Modifier.height(16.dp))
             
-            // Action Buttons
+            // Action Buttons - Kept for now, may need to be adapted for student wallet context
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 OutlinedButton(
-                    onClick = { /* View details */ },
+                    onClick = { /* TODO: Implement View details for student wallet */ },
                     modifier = Modifier.weight(1f),
                     shape = RoundedCornerShape(8.dp)
                 ) {
@@ -294,36 +226,35 @@ fun CredentialManagementCard(credential: Credential) {
                     Text("View")
                 }
                 
+                // Approve/Revoke buttons are university-centric, might not apply for student wallet view
+                // Or could be re-purposed for actions like "Accept Credential" if applicable
                 if (credential.status == CredentialStatus.PENDING) {
                     Button(
-                        onClick = { /* Approve credential */ },
+                        onClick = { /* TODO: Action for PENDING in student wallet? */ },
                         modifier = Modifier.weight(1f),
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Check,
-                            contentDescription = "Approve",
+                            imageVector = Icons.Default.Check, // Placeholder icon
+                            contentDescription = "Action for Pending", // Placeholder
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Approve")
+                        Text("Pending Action") // Placeholder
                     }
-                } else {
-                    OutlinedButton(
-                        onClick = { /* Revoke credential */ },
+                } else if (credential.status == CredentialStatus.VERIFIED && credential.studentAccepted == false) {
+                     Button(
+                        onClick = { /* TODO: Implement Student Accept Credential */ },
                         modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.error
-                        )
+                        shape = RoundedCornerShape(8.dp)
                     ) {
                         Icon(
-                            imageVector = Icons.Default.Block,
-                            contentDescription = "Revoke",
+                            imageVector = Icons.Default.ThumbUp,
+                            contentDescription = "Accept",
                             modifier = Modifier.size(18.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Revoke")
+                        Text("Accept")
                     }
                 }
             }
@@ -355,7 +286,7 @@ fun CredentialDetailRow(
             text = "$label:",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.width(100.dp)
+            modifier = Modifier.width(100.dp) // Adjusted width for potentially longer labels
         )
         Text(
             text = value,
@@ -364,137 +295,12 @@ fun CredentialDetailRow(
                 MaterialTheme.colorScheme.primary
             } else {
                 MaterialTheme.colorScheme.onSurface
-            }
+            },
+            maxLines = 1, // Ensure value doesn't wrap excessively if too long
+            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis // Add ellipsis for long values
         )
     }
 }
 
-@Composable
-fun StatusChip(status: CredentialStatus) {
-    val (backgroundColor, textColor, text) = when (status) {
-        CredentialStatus.VERIFIED -> Triple(
-            MaterialTheme.colorScheme.primaryContainer,
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            "Verified"
-        )
-        CredentialStatus.PENDING -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            "Pending"
-        )
-        CredentialStatus.EXPIRED -> Triple(
-            MaterialTheme.colorScheme.errorContainer,
-            MaterialTheme.colorScheme.onErrorContainer,
-            "Expired"
-        )
-        CredentialStatus.REVOKED -> Triple( // Added
-            MaterialTheme.colorScheme.errorContainer, 
-            MaterialTheme.colorScheme.onErrorContainer,
-            "Revoked"
-        )
-        CredentialStatus.ANCHORED -> Triple( // Added
-            MaterialTheme.colorScheme.tertiaryContainer, 
-            MaterialTheme.colorScheme.onTertiaryContainer,
-            "Anchored"
-        )
-        CredentialStatus.ACCEPTED -> Triple( // Added
-            MaterialTheme.colorScheme.primaryContainer, 
-            MaterialTheme.colorScheme.onPrimaryContainer,
-            "Accepted"
-        )
-        CredentialStatus.UNKNOWN -> Triple( // Added
-            MaterialTheme.colorScheme.surfaceVariant, 
-            MaterialTheme.colorScheme.onSurfaceVariant,
-            "Unknown"
-        )
-    }
-    
-    Surface(
-        shape = RoundedCornerShape(16.dp),
-        color = backgroundColor
-    ) {
-        Text(
-            text = text,
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelSmall,
-            color = textColor,
-            fontWeight = FontWeight.Medium
-        )
-    }
-}
-
-@Composable
-fun CreateCredentialDialog(
-    onDismiss: () -> Unit,
-    onCreate: (String, String, String, String) -> Unit // Consider a data class for onCreate
-) {
-    var title by remember { mutableStateOf("") }
-    var studentId by remember { mutableStateOf("") }
-    var studentName by remember { mutableStateOf("") }
-    var graduationDate by remember { mutableStateOf("") } // Should be dateIssued or similar to match Credential
-    
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = {
-            Text(
-                text = "Create New Credential",
-                fontWeight = FontWeight.Bold
-            )
-        },
-        text = {
-            Column(
-                verticalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it },
-                    label = { Text("Credential Title") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                
-                OutlinedTextField(
-                    value = studentId,
-                    onValueChange = { studentId = it },
-                    label = { Text("Student ID") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                
-                OutlinedTextField(
-                    value = studentName,
-                    onValueChange = { studentName = it },
-                    label = { Text("Student Name") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                
-                OutlinedTextField(
-                    value = graduationDate, // Should be dateIssued or similar
-                    onValueChange = { graduationDate = it },
-                    label = { Text("Date Issued (YYYY-MM-DD)") }, // Updated label
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-            }
-        },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    if (title.isNotBlank() && studentId.isNotBlank() && 
-                        studentName.isNotBlank() && graduationDate.isNotBlank()) {
-                        onCreate(title, studentId, studentName, graduationDate)
-                        // onDismiss() // Dialog is dismissed in the calling site's onCreate lambda
-                    }
-                }
-            ) {
-                Text("Create")
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Cancel")
-            }
-        }
-    )
-}
+// Removed local StatusChip definition, will use the one from com.unicred.ui.screens.student.StatusChip
+// Removed CreateCredentialDialog composable

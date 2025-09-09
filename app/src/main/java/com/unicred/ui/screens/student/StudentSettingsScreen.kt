@@ -6,14 +6,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Info // Keep this import as it's used
+import androidx.compose.material.icons.outlined.* // Changed to wildcard import for outlined icons
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+// import androidx.compose.ui.graphics.Color // Not directly used
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,25 +23,26 @@ import com.unicred.data.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentSettingsScreen( // Renamed from StudentProfile
+fun StudentSettingsScreen(
     user: User,
     onLogout: () -> Unit
 ) {
     var showLogoutDialog by remember { mutableStateOf(false) }
-    var pushNotificationsEnabled by remember { mutableStateOf(true) } // Example state
-    var emailAlertsEnabled by remember { mutableStateOf(false) }    // Example state
+    var pushNotificationsEnabled by remember { mutableStateOf(true) } 
+    var emailAlertsEnabled by remember { mutableStateOf(false) }    
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(vertical = 16.dp) // Add overall vertical padding
     ) {
-        item { // Main "Settings" title
+        item { 
             Text(
                 text = "Settings",
-                style = MaterialTheme.typography.headlineMedium,
+                style = MaterialTheme.typography.headlineLarge, // Slightly larger title
                 fontWeight = FontWeight.Bold,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 12.dp)
+                    .padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 16.dp) // Adjusted padding
             )
         }
 
@@ -77,7 +79,7 @@ fun StudentSettingsScreen( // Renamed from StudentProfile
         item { SettingsSectionTitleInternal("Preferences") }
         item {
             SettingsToggleItemInternal(
-                icon = Icons.Default.Notifications,
+                icon = Icons.Outlined.Notifications, // Corrected to Icons.Outlined
                 title = "Push Notifications",
                 subtitle = "Receive updates and alerts",
                 checked = pushNotificationsEnabled,
@@ -86,7 +88,7 @@ fun StudentSettingsScreen( // Renamed from StudentProfile
         }
         item {
             SettingsToggleItemInternal(
-                icon = Icons.Default.Email,
+                icon = Icons.Outlined.Email, // Corrected to Icons.Outlined
                 title = "Email Alerts",
                 subtitle = "Receive important email notifications",
                 checked = emailAlertsEnabled,
@@ -121,20 +123,21 @@ fun StudentSettingsScreen( // Renamed from StudentProfile
         }
 
         item {
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp)) // Increased spacer for logout button
             Button(
                 onClick = { showLogoutDialog = true },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 16.dp)
+                    .padding(horizontal = 16.dp) // Consistent horizontal padding
                     .height(50.dp),
-                shape = RoundedCornerShape(8.dp),
+                shape = RoundedCornerShape(12.dp), // Slightly more rounded
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.errorContainer)
             ) {
                 Icon(Icons.Default.Logout, contentDescription = "Logout", tint = MaterialTheme.colorScheme.onErrorContainer)
                 Spacer(Modifier.size(ButtonDefaults.IconSpacing))
-                Text("Logout", color = MaterialTheme.colorScheme.onErrorContainer, fontSize = 16.sp)
+                Text("Logout", color = MaterialTheme.colorScheme.onErrorContainer, fontSize = 16.sp, fontWeight = FontWeight.SemiBold)
             }
+            Spacer(modifier = Modifier.height(16.dp)) // Padding at the bottom
         }
     }
 
@@ -148,7 +151,8 @@ fun StudentSettingsScreen( // Renamed from StudentProfile
                     onClick = {
                         showLogoutDialog = false
                         onLogout()
-                    }
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
                 ) {
                     Text("Logout")
                 }
@@ -162,24 +166,24 @@ fun StudentSettingsScreen( // Renamed from StudentProfile
     }
 }
 
-// Helper composables (StudentSettingsHeader, SettingsSectionTitleInternal, etc.) remain the same
 @Composable
 fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = 24.dp, bottom = 24.dp, start = 16.dp, end = 16.dp),
+            .padding(top = 8.dp, bottom = 24.dp, start = 16.dp, end = 16.dp), // Adjusted padding
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Surface(
             modifier = Modifier
                 .size(80.dp)
                 .clip(CircleShape),
-            color = MaterialTheme.colorScheme.primaryContainer
+            color = MaterialTheme.colorScheme.primaryContainer,
+            tonalElevation = 4.dp
         ) {
             Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
                 Text(
-                    text = user.username.firstOrNull()?.uppercaseChar()?.toString() ?: "S", // Default to S for Student
+                    text = user.username.firstOrNull()?.uppercaseChar()?.toString() ?: "S",
                     style = MaterialTheme.typography.headlineLarge,
                     color = MaterialTheme.colorScheme.onPrimaryContainer,
                     fontSize = 36.sp
@@ -193,7 +197,7 @@ fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
             fontWeight = FontWeight.Bold
         )
         Text(
-            text = user.email ?: "student@example.com", // Placeholder email
+            text = user.email ?: "student@example.com", 
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -204,10 +208,10 @@ fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
         OutlinedButton(
             onClick = onEditProfileClick,
-            shape = RoundedCornerShape(8.dp)
+            shape = RoundedCornerShape(12.dp)
         ) {
             Icon(Icons.Filled.Edit, contentDescription = "Edit Profile", modifier = Modifier.size(ButtonDefaults.IconSize))
             Spacer(Modifier.size(ButtonDefaults.IconSpacing))
@@ -220,12 +224,12 @@ fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
 fun SettingsSectionTitleInternal(title: String) {
     Text(
         text = title,
-        style = MaterialTheme.typography.titleMedium,
+        style = MaterialTheme.typography.titleSmall, // Refined style for section title
         fontWeight = FontWeight.SemiBold,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 16.dp, end = 16.dp, top = 20.dp, bottom = 10.dp),
-        color = MaterialTheme.colorScheme.onSurface
+            .padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 12.dp),
+        color = MaterialTheme.colorScheme.primary // Use primary color for emphasis
     )
 }
 
@@ -236,18 +240,23 @@ fun SettingsNavigationItemInternal(
     subtitle: String,
     onClick: () -> Unit
 ) {
-    Column(modifier = Modifier.clickable(onClick = onClick)) {
+    Column(
+        modifier = Modifier
+            .clickable(onClick = onClick)
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp) // Horizontal padding for the whole item
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(vertical = 16.dp), // Vertical padding for content
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant // Muted icon color
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -255,13 +264,13 @@ fun SettingsNavigationItemInternal(
                 Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Icon(
-                imageVector = Icons.Default.ArrowForwardIos, // Ensure this icon is available or use ChevronRight
+                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos, // RTL support
                 contentDescription = "Navigate",
                 modifier = Modifier.size(18.dp),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
             )
         }
-        Divider(modifier = Modifier.padding(start = 16.dp + 24.dp + 16.dp, end = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), thickness = 0.5.dp) // Subtle divider
     }
 }
 
@@ -273,18 +282,23 @@ fun SettingsToggleItemInternal(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit
 ) {
-    Column(modifier = Modifier.clickable { onCheckedChange(!checked) }) {
+    Column(
+        modifier = Modifier
+            .clickable { onCheckedChange(!checked) }
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp) // Horizontal padding for the whole item
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 16.dp),
+                .padding(vertical = 16.dp), // Vertical padding for content
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = MaterialTheme.colorScheme.onSurfaceVariant // Muted icon color
             )
             Spacer(modifier = Modifier.width(16.dp))
             Column(modifier = Modifier.weight(1f)) {
@@ -296,12 +310,12 @@ fun SettingsToggleItemInternal(
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = MaterialTheme.colorScheme.primary,
-                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                    checkedTrackColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
                     uncheckedThumbColor = MaterialTheme.colorScheme.outline,
-                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant
+                    uncheckedTrackColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
                 )
             )
         }
-        Divider(modifier = Modifier.padding(start = 16.dp + 24.dp + 16.dp, end = 16.dp), color = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        Divider(color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f), thickness = 0.5.dp) // Subtle divider
     }
 }

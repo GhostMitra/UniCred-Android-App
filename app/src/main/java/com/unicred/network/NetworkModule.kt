@@ -2,6 +2,7 @@ package com.unicred.network
 
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.unicred.data.remote.ApiService // Added this import
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

@@ -3,7 +3,9 @@ package com.unicred.ui.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.unicred.data.Credential
+import com.unicred.data.mappers.toDomainCredential // Import the mapper
 import com.unicred.data.repository.StudentWalletRepository
+// StudentWalletApiResponse is implicitly handled by the repository's return type
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -16,8 +18,6 @@ data class StudentWalletUiState(
     val isLoading: Boolean = true,
     val credentials: List<Credential> = emptyList(),
     val errorMessage: String? = null,
-    // Optional: Student name could be sourced from a general User session state or a different API call
-    // For now, not directly populated by fetchWalletCredentials as the repo returns List<Credential>
     val studentName: String? = null 
 )
 
@@ -41,13 +41,16 @@ class StudentWalletViewModel @Inject constructor(
                 it.copy(isLoading = true, errorMessage = null)
             }
             studentWalletRepository.getStudentWalletCredentials(username)
-                .onSuccess { fetchedCredentials ->
+                .onSuccess { apiResponse -> // apiResponse is StudentWalletApiResponse
+                    val studentNameFromApi = apiResponse.student.name
+                    val mappedCredentials = apiResponse.credentials.map {
+                        it.toDomainCredential(studentFullName = studentNameFromApi)
+                    }
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            credentials = fetchedCredentials,
-                            // studentName can be set here if the repository call also returned student info
-                            // or if we fetch it separately based on the username.
+                            credentials = mappedCredentials,
+                            studentName = studentNameFromApi
                         )
                     }
                 }

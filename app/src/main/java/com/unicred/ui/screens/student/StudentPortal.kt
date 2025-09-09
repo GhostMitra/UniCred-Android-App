@@ -6,7 +6,7 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+// import androidx.compose.ui.graphics.vector.ImageVector // Not directly used, Icons.Default.* are sufficient
 import androidx.compose.ui.res.stringResource
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -20,7 +20,7 @@ import com.unicred.data.User
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StudentPortal(
-    user: User,
+    user: User, // This user parameter is for StudentSettingsScreen
     onLogout: () -> Unit
 ) {
     val navController = rememberNavController()
@@ -31,11 +31,13 @@ fun StudentPortal(
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 
-                listOf(
+                val navItems = listOf(
                     Triple("dashboard", Icons.Default.Home, stringResource(R.string.dashboard)),
                     Triple("credentials", Icons.Default.Description, stringResource(R.string.credentials)),
-                    Triple("profile", Icons.Default.Person, stringResource(R.string.profile))
-                ).forEach { (route, icon, label) ->
+                    Triple("settings", Icons.Default.Settings, stringResource(R.string.settings)) // Changed to stringResource
+                )
+
+                navItems.forEach { (route, icon, label) ->
                     NavigationBarItem(
                         icon = { Icon(icon, contentDescription = label) },
                         label = { Text(label) },
@@ -60,13 +62,13 @@ fun StudentPortal(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable("dashboard") {
-                StudentDashboard(user = user)
+                StudentDashboard()
             }
             composable("credentials") {
-                StudentCredentials(user = user)
+                StudentCredentials()
             }
-            composable("profile") {
-                StudentProfile(user = user, onLogout = onLogout)
+            composable("settings") { 
+                StudentSettingsScreen(user = user, onLogout = onLogout) // Changed to StudentSettingsScreen
             }
         }
     }

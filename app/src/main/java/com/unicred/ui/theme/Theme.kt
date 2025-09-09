@@ -10,10 +10,12 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
-import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.Color // Added import for Color.Transparent
+import androidx.compose.ui.graphics.toArgb // Keep for potential future use or other scenarios
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
-import androidx.core.view.WindowCompat
+import androidx.core.view.WindowCompat // Keep for general window management
+import com.google.accompanist.systemuicontroller.rememberSystemUiController // Added import for System UI Controller
 
 private val DarkColorScheme = darkColorScheme(
     primary = md_theme_dark_primary,
@@ -90,11 +92,16 @@ fun UniCredTheme(
         else -> LightColorScheme
     }
     val view = LocalView.current
+    val systemUiController = rememberSystemUiController()
+
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            // Set system bars to transparent. 
+            // The darkIcons parameter handles icon color inversion.
+            systemUiController.setSystemBarsColor(
+                color = Color.Transparent,
+                darkIcons = !darkTheme
+            )
         }
     }
 

@@ -1,6 +1,6 @@
 package com.unicred.data
 
-import com.unicred.network.ApiService
+import com.unicred.data.remote.ApiService // Changed import
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -56,6 +56,7 @@ class AuthRepository @Inject constructor(
                 val user = User(
                     id = signupAPIResponse.user.id, // Accessing from nested user object
                     username = signupAPIResponse.user.username ?: signupData.username, // Accessing from nested user object
+                    accessType = signupData.accessType, // Added: Pass the accessType string from signupData
                     email = signupAPIResponse.user.email, // Accessing from nested user object
                     fullName = null, 
                     studentId = null 

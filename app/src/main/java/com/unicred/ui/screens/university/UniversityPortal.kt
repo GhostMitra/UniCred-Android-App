@@ -23,6 +23,7 @@ import androidx.navigation.compose.rememberNavController
 import com.unicred.data.DashboardCredentialSummary
 import com.unicred.data.DashboardMetrics
 import com.unicred.data.User
+import com.unicred.ui.screens.university.StudentWalletScreen // Added import
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,10 +74,10 @@ fun UniversityPortal(
                 UniversityDashboardScreen(user = user)
             }
             composable("university_student_directory") {
-                StudentDirectory()
+                UniversityPortalStudentDirectoryPlaceholder() // Changed call
             }
             composable("university_credential_management") {
-                CredentialManagement()
+                StudentWalletScreen() // Changed from CredentialManagement()
             }
             composable("university_settings") {
                 UniversitySettings(user = user, onLogout = onLogout)
@@ -234,6 +235,14 @@ fun UniversityRecentCredentialCard(credential: DashboardCredentialSummary) {
     }
 }
 
-// Note: If your existing StudentDirectory, CredentialManagement, or UniversitySettings
+@Composable
+fun UniversityPortalStudentDirectoryPlaceholder() { // Renamed function
+    // Placeholder for Student Directory
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text("Student Directory Screen - Coming Soon!")
+    }
+}
+
+// Note: If your existing StudentDirectory, or UniversitySettings
 // composables require 'user' or 'onLogout' parameters or need to be adapted for
 // this navigation structure, you might need to create wrapper composables or modify them.
