@@ -7,7 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.Info // Added import
+import androidx.compose.material.icons.outlined.Info // Keep this import as it's used
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -22,7 +22,7 @@ import com.unicred.data.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudentProfile(
+fun StudentSettingsScreen( // Renamed from StudentProfile
     user: User,
     onLogout: () -> Unit
 ) {
@@ -113,7 +113,7 @@ fun StudentProfile(
         }
         item {
             SettingsNavigationItemInternal(
-                icon = Icons.Outlined.Info, // Changed to Icons.Outlined.Info
+                icon = Icons.Outlined.Info,
                 title = "About",
                 subtitle = "App version and information",
                 onClick = { /* TODO: Show About Dialog or Screen */ }
@@ -162,6 +162,7 @@ fun StudentProfile(
     }
 }
 
+// Helper composables (StudentSettingsHeader, SettingsSectionTitleInternal, etc.) remain the same
 @Composable
 fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
     Column(
@@ -214,9 +215,6 @@ fun StudentSettingsHeader(user: User, onEditProfileClick: () -> Unit) {
         }
     }
 }
-
-// Helper composables (SettingsSectionTitleInternal, SettingsNavigationItemInternal, SettingsToggleItemInternal)
-// These are similar to those in RecruiterPortal.kt but defined locally for encapsulation if preferred.
 
 @Composable
 fun SettingsSectionTitleInternal(title: String) {
